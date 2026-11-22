@@ -30,21 +30,26 @@ git pull
 Your job this lesson: build a spread analysis toolkit from scratch and apply it
 to real donation data.
 
+The lesson linked in the Google Classroom assignment is the authority for the
+whole lab — every function, every number, and the turn-in. This README is the
+repo map plus the contract your pushed `spread.py` has to meet.
+
 ## What's here
 
-- `spread.py` — **your file to create**. You will write functions for range,
-  variance, and standard deviation, then run them on the donations dataset.
+- `spread.py` — **your file to create**. Four functions: `mean_of`,
+  `median_of`, `variance_of`, `stdev_of`. It opens the data file itself so it
+  runs cold with `python3 spread.py`.
 - `data/u3_donations.txt` — 200 alumni donation amounts (one per line). One
-  extreme outlier (90000) is included on purpose.
-- `README.md` — this file. You'll edit it at the end with your results.
+  mis-key of 90000 is included on purpose.
+- `README.md` — this file.
 - `journal-TEMPLATE.md` — copy this to make your reflection journal.
 - `self_check.py` + `journal_check.yml` — CI progress meter (never pass/fail).
 - `.github/workflows/grade.yml` — runs the check on every push.
 
 ## Your job
 
-Follow the lesson parts in order. Each part tells you exactly what function to
-write and what to test. Create `spread.py` as you go — do not rename it.
+Follow the lesson parts in order. Create `spread.py` as you go — do not rename
+it. The code below is the artifact contract; the lesson gives the reasoning.
 
 ### PART 0 — Set up (5 min)
 
@@ -61,22 +66,17 @@ print(len(donations), len(clean))
 
 You should see `200 199` — 200 total, 199 after removing the 90000 outlier.
 
-### PART 1 — Range (5 min)
+### PART 1 — Load the data inside spread.py (5 min)
 
-Add to `spread.py`:
-
-```python
-def range_of(values):
-    return max(values) - min(values)
-```
-
-Test it:
+Put this at the **top** of `spread.py`. Variables you made in the PART 0
+one-liner do not exist when you run the file as a script — without this block
+`python3 spread.py` dies with `NameError: name 'donations' is not defined`.
 
 ```python
-from spread import range_of
-print(f"range with outlier: {range_of(donations):.2f}")
-print(f"range clean:        {range_of(clean):.2f}")
-print(f"ratio: {range_of(donations) / range_of(clean):.1f}x")
+with open("data/u3_donations.txt") as f:
+    raw = [line.strip() for line in f if line.strip()]
+donations = [float(line) for line in raw if not line.startswith("#")]
+clean = [d for d in donations if d < 5000]
 ```
 
 ### PART 2 — Variance (15 min)
@@ -90,31 +90,32 @@ def variance_of(values):
     return total / len(values)
 ```
 
-Test on the paper set first (should match 588.89), then on real data.
+Test on the paper set `25 40 50 60 75 100` first (should match 588.89), then on
+real data. Divide by `len(values)` — population variance. No `statistics`
+library, no pandas.
 
-### PART 3 — Standard Deviation (10 min)
-
-Add to `spread.py`:
-
-```python
-import math
-
-def stddev_of(values):
-    return math.sqrt(variance_of(values))
-```
-
-### PART 4 — Empirical Rule Check (10 min)
+### PART 3 — Standard deviation (10 min)
 
 Add to `spread.py`:
 
 ```python
-def within_one_sd(values):
-    m = sum(values) / len(values)
-    s = stddev_of(values)
-    return sum(1 for v in values if m - s <= v <= m + s) / len(values) * 100
+def stdev_of(values):
+    return variance_of(values) ** 0.5
 ```
 
-Print the percentage for the clean dataset.
+No `import math` and no `statistics` module — the lesson writes the formulas.
+
+### PART 4 — Run it cold (10 min)
+
+Add `mean_of` and `median_of` as the lesson gives them, then print the
+side-by-side table. `python3 spread.py` from the repo root must produce exactly
+the expected output in the lesson:
+
+```text
+set             mean    median       range      stdev
+all 200        716.07     242.76    89928.67    6330.32
+clean 199      267.40     242.38      742.56     121.05
+```
 
 ### PART 5 — Save, Commit, Push (last 10 min)
 
